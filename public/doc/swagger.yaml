@@ -1,0 +1,349 @@
+swagger: '2.0'
+info:
+  description: CMS-API ドキュメント
+  version: 0.0.1
+  title: CMS-API REST APIs
+host: localhost:8080
+basePath: /api
+tags:
+  - name: schemas
+    description: Schemas APIs
+  - name: data
+    description: Data APIs
+schemes:
+  - http
+  - https
+paths:
+  /schemas:
+    get:
+      tags:
+        - schemas
+      summary: 全 Schemas 取得
+      description: 全 Schemas 取得
+      produces:
+        - application/json
+      parameters:
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /schema/{title}:
+    post:
+      tags:
+        - schemas
+      summary: Schema 作成
+      description: Schema 作成
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/SchemaRequest'
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    get:
+      tags:
+        - schemas
+      summary: Schema 取得
+      description: Schema 取得
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    put:
+      tags:
+        - schemas
+      summary: Schema 更新
+      description: Schema 更新
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/SchemaRequest'
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    delete:
+      tags:
+        - schemas
+      summary: Schema 削除
+      description: Schema 削除
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /data/{title}:
+    get:
+      tags:
+        - data
+      summary: 全 data 取得
+      description: 全 data 取得
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    post:
+      tags:
+        - data
+      summary: data 作成
+      description: data 作成
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/DataRequest'
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+  /data/{title}/{id}:
+    get:
+      tags:
+        - data
+      summary: data 取得
+      description: data 取得
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: id
+          type: string
+          in: path
+          description: ID
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    put:
+      tags:
+        - data
+      summary: data 更新
+      description: data 更新
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: id
+          type: string
+          in: path
+          description: ID
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/DataRequest'
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+    delete:
+      tags:
+        - data
+      summary: data 削除
+      description: data 削除
+      produces:
+        - application/json
+      parameters:
+        - name: title
+          type: string
+          in: path
+          description: Schema 名
+          required: true
+        - name: id
+          type: string
+          in: path
+          description: ID
+          required: true
+        - name: repo
+          type: string
+          in: query
+          description: GitHub リポジトリ名
+          required: true
+        - name: x-token
+          type: string
+          in: header
+          description: GitHub アクセストークン
+      responses:
+        '200':
+          description: 成功
+        '400':
+          description: エラー
+definitions:
+  SchemaRequest:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: string
+      created:
+        type: string
+      updated:
+        type: string
+  DataRequest:
+    type: object
+    properties:
+      id:
+        type: string
+        description: id
+      name:
+        type: string
+        description: name
+      price:
+        type: integer
+        description: price
+      created:
+        type: integer
+        description: created timestamp
+      updated:
+        type: integer
+        description: updated timestamp
+
