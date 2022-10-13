@@ -318,8 +318,6 @@ definitions:
   SchemaRequest:
     type: object
     properties:
-      id:
-        type: string
       name:
         type: string
       price:
@@ -331,19 +329,16 @@ definitions:
   DataRequest:
     type: object
     properties:
-      id:
-        type: string
-        description: id
       name:
         type: string
         description: name
       price:
-        type: integer
+        type: number
         description: price
       created:
-        type: integer
+        type: number
         description: created timestamp
       updated:
-        type: integer
+        type: number
         description: updated timestamp
 

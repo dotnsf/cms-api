@@ -60,7 +60,7 @@ app.getMe = async function( token ){
       };
       request( option, function( err, res0, body ){
         if( err ){
-          console.log( {err} );
+          console.log( { err } );
           resolve( { status: false, error: err } );
         }else{
           if( typeof body == 'string' ){
@@ -119,7 +119,11 @@ app.postSchema = async function( repo, title, token, schema_data ){
             if( body.message ){
               resolve( { status: false, error: body } );
             }else{
-              resolve( { status: true, res_headers: res.headers, schema: body } );
+              var t = body.body;
+              if( typeof t == 'string' ){ t = JSON.parse( t ); }
+              var newschema_data = t;
+              newschema_data.title = body.title;
+              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
             }
           }
         });
@@ -154,7 +158,14 @@ app.getSchemas = async function( repo, token ){
         if( body.message ){
           resolve( { status: false, error: body } );
         }else{
-          resolve( { status: true, res_headers: res.headers, schemas: body } );
+          var newschema_data = [];
+          for( var i = 0; i < body.length; i ++ ){
+            var t = body[i].body;
+            if( typeof t == 'string' ){ t = JSON.parse( t ); }
+            newschema_data.push( { title: body[i].title, number: body[i].number, schema: t } );
+          }
+
+          resolve( { status: true, res_headers: res.headers, schemas: newschema_data } );
         }
       }
     });
@@ -200,7 +211,11 @@ app.putSchema = async function( repo, title, token, schema_data ){
             if( body.message ){
               resolve( { status: false, error: body } );
             }else{
-              resolve( { status: true, res_headers: res.headers, schema: body } );
+              var t = body.body;
+              if( typeof t == 'string' ){ t = JSON.parse( t ); }
+              var newschema_data = t;
+              newschema_data.title = body.title;
+              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
             }
           }
         });
@@ -248,7 +263,11 @@ app.deleteSchema = async function( repo, title, token ){
             if( body.message ){
               resolve( { status: false, error: body } );
             }else{
-              resolve( { status: true, res_headers: res.headers, schema: body } );
+              var t = body.body;
+              if( typeof t == 'string' ){ t = JSON.parse( t ); }
+              var newschema_data = t;
+              newschema_data.title = body.title;
+              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
             }
           }
         });
@@ -291,7 +310,11 @@ app.postData = async function( repo, title, token, data ){
           if( body.message ){
             resolve( { status: false, error: body } );
           }else{
-            resolve( { status: true, res_headers: res.headers, data: body } );
+            var t = body.body;
+            if( typeof t == 'string' ){ t = JSON.parse( t ); }
+            var newdata = t;
+            newdata.id = body.id;
+            resolve( { status: true, res_headers: res.headers, data: newdata } );
           }
         }
       });
@@ -332,7 +355,13 @@ app.getData = async function( repo, title, token ){
               body = JSON.parse( body );
             }
             //console.log( { body } );
-            resolve( { status: true, res_headers: res.headers, number: number, data: body } );
+            var newdata = [];
+            for( var i = 0; i < body.length; i ++ ){
+              var t = body[i].body;
+              if( typeof t == 'string' ){ t = JSON.parse( t ); }
+              newdata.push( { id: body[i].id, data: t } );
+            }
+            resolve( { status: true, res_headers: res.headers, number: number, data: newdata } );
           }
         });
       }else{
@@ -351,12 +380,12 @@ app.putData = async function( repo, title, id, token, data ){
       var _id = null;
       for( var i = 0; i < r0.data.length && _id == null; i ++ ){
         if( id == r0.data[i].id ){
-          _id = r0.schemas[i].id;
+          _id = r0.data[i].id;
         }
       }
 
       if( _id ){
-        var url = api_server_base + repo + '/issues/' + r0.number + '/comments/' + _id;
+        var url = api_server_base + repo + '/issues/comments/' + _id;
         if( typeof data == 'object' ){
           data = JSON.stringify( data );
         }
@@ -382,7 +411,11 @@ app.putData = async function( repo, title, id, token, data ){
             if( body.message ){
               resolve( { status: false, error: body } );
             }else{
-              resolve( { status: true, res_headers: res.headers, number: r0.number, data: body } );
+              var t = body.body;
+              if( typeof t == 'string' ){ t = JSON.parse( t ); }
+              var newdata = t;
+              newdata.id = body.id;
+              resolve( { status: true, res_headers: res.headers, number: r0.number, data: newdata } );
             }
           }
         });
@@ -402,12 +435,12 @@ app.deleteData = async function( repo, title, id, token ){
       var _id = null;
       for( var i = 0; i < r0.data.length && _id == null; i ++ ){
         if( id == r0.data[i].id ){
-          _id = r0.schemas[i].id;
+          _id = r0.data[i].id;
         }
       }
 
       if( _id ){
-        var url = api_server_base + repo + '/issues/' + r0.number + '/comments/' + _id;
+        var url = api_server_base + repo + '/issues/comments/' + _id;
         if( typeof data == 'object' ){
           data = JSON.stringify( data );
         }
@@ -425,15 +458,7 @@ app.deleteData = async function( repo, title, id, token ){
             console.log( { err } );
             resolve( { status: false, error: err } );
           }else{
-            if( typeof body == 'string' ){
-              body = JSON.parse( body );
-            }
-            //console.log( { body } );  //. レートリミットに達していると { "message": "API rate limit  exceeded for xx.xx.xx.xx. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting" }
-            if( body.message ){
-              resolve( { status: false, error: body } );
-            }else{
-              resolve( { status: true, res_headers: res.headers, number: r0.number, data: body } );
-            }
+            resolve( { status: true, res_headers: res.headers, number: r0.number } );
           }
         });
       }else{
@@ -486,6 +511,7 @@ app.get( '/callback', function( req, res ){
         var tmp2 = tmp1[i].split( '=' );
         if( tmp2.length == 2 && tmp2[0] == 'access_token' ){
           var access_token = tmp2[1];
+          console.log( 'access_token = ' + access_token );
 
           req.session.oauth = {};
           req.session.oauth.token = access_token;
