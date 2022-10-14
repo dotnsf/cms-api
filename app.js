@@ -931,6 +931,7 @@ function isDataValidSchema( data, schema ){
   if( typeof schema == 'string' ){ data = JSON.parse( schema ); }
 
   if( typeof data == 'object' && typeof schema == 'object' ){
+    console.log( 1 );
     //. 「schema に設定されているキー値は全て必須」をルールとする
     //. 「data に設定されているキー値は全て必須」ではない
     //. schema 設定変更に伴うデータの矛盾はいったん無視とする
@@ -940,11 +941,22 @@ function isDataValidSchema( data, schema ){
     */
     Object.keys( schema ).forEach( function( key ){
       //. schema に設定されているキーを持ち、データ型が一致しているかどうかをチェック
-      if( !( key in data ) || !( typeof data[key] == schema[key] ) ){
+      if( !( key in data ) ){
         b = false;
+      }else if( schema[key] == 'richtext' || schema[key] == 'binary' ){
+        //. data[key] = 'text/markdown \t markdown';
+        //.        or = 'image/png \t base64';
+        if( !( typeof data[key] == 'string' ) || data[key].split( ' \t ' ).length < 2 ){
+          b = false;
+        }
+      }else{
+        if( !( typeof data[key] == schema[key] ) ){
+          b = false;
+        }
       }
     });
   }else{
+    console.log( 2 );
     b = false;
   }
 
