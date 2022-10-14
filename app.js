@@ -4,6 +4,7 @@ const { jar } = require('request');
 var express = require( 'express' ),
     bodyParser = require( 'body-parser' ),
     cookieParser = require( 'cookie-parser' ),
+    ejs = require( 'ejs' ),
     fs = require( 'fs' ),
     http = require( 'http' ),
     https = require( 'https' ),
@@ -46,6 +47,9 @@ app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 app.use( express.Router() );
 app.use( express.static( __dirname + '/public' ) );
+
+app.set( 'views', __dirname + '/views' );
+app.set( 'view engine', 'ejs' );
 
 
 var api_server = 'API_SERVER' in process.env && process.env.API_SERVER ? process.env.API_SERVER : 'api.github.com';
@@ -550,22 +554,21 @@ app.get( '/login', function( req, res ){
 });
 
 app.get( '/logout', function( req, res ){
-  res.contentType( 'application/json; charset=utf-8' );
-
   if( req.session.oauth ){
     req.session.oauth = {};
   }
-  if( req.session.ghac ){
-    req.session.ghac = null;
-  }
 
-  res.write( JSON.stringify( { status: true, message: 'logged out' }, null, 2 ) );
-  res.end();
+  //. #8
+  if( req.query.redirect ){
+    res.redirect( req.query.redirect );
+  }else{
+    res.contentType( 'application/json; charset=utf-8' );
+    res.write( JSON.stringify( { status: true, message: 'logged out' }, null, 2 ) );
+    res.end();
+  }
 });
 
 app.get( '/callback', function( req, res ){
-  res.contentType( 'application/json; charset=utf-8' );
-
   var code = req.query.code;
   var option = {
     url: 'https://github.com/login/oauth/access_token',
@@ -597,16 +600,31 @@ app.get( '/callback', function( req, res ){
       }
     }
 
-    res.write( JSON.stringify( { status: true, session: req.session }, null, 2 ) );
-    res.end();
+    //. #8
+    if( req.query.redirect ){
+      res.redirect( req.query.redirect );
+    }else{
+      res.contentType( 'application/json; charset=utf-8' );
+      res.write( JSON.stringify( { status: true, session: req.session }, null, 2 ) );
+      res.end();
+    }
   });
 });
 
 
 app.get( '/', function( req, res ){
-  res.contentType( 'application/json; charset=utf-8' );
-  res.write( JSON.stringify( { status: true }, null, 2 ) );
-  res.end();
+  try{
+    if( req.session && req.session.oauth && req.session.oauth.token ){ 
+      console.log( req.session.oauth );
+      res.render( 'index', { user: req.session.oauth, API_SERVER: '' } );
+    }else{
+      res.redirect( '/login' );
+    }
+  }catch( e ){
+    console.log( e );
+    res.render( 'index', { user: null, API_SERVER: '', error: e } );
+  }finally{
+  }
 });
 
 
@@ -621,8 +639,8 @@ app.post( '/api/schema/:title', async function( req, res ){
     if( title ){
       var schema_data = req.body;
       var r = await app.postSchema( repo, title, token, schema_data );
-      if( r && r.status && r.schema ){
-        res.write( JSON.stringify( { status: true, schema: r.schema }, null, 2 ) );
+      if( r && r.status && r[title] ){
+        res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
         res.status( 400 );
@@ -650,16 +668,17 @@ app.get( '/api/schema/:title', async function( req, res ){
     var title = req.params.title;
     if( title ){
       var r = await app.getSchemas( repo, token );
-      if( r && r.status && r.schemas ){
+      if( r && r.status && r[title] ){
         var schema = null;
-        for( var i = 0; i < r.schemas.length && schema == null; i ++ ){
-          if( r.schemas[i].title == title ){
-            schema = r.schemas[i];
+        for( var i = 0; i < r[title].length && schema == null; i ++ ){
+          if( r[title][i].title == title ){
+            schema = r[title][i];
           }
         }
 
         if( schema ){
-          res.write( JSON.stringify( { status: true, schema: schema }, null, 2 ) );
+          var result = { status: true, res_headers: r.res_headers, schema: schema };
+          res.write( JSON.stringify( result, null, 2 ) );
           res.end();
         }else{
           res.status( 400 );
@@ -807,16 +826,18 @@ app.get( '/api/data/:title/:id', async function( req, res ){
     var id = req.params.id;
     if( title && id ){
       var r = await app.getData( repo, title, token );
-      if( r && r.status && r.data ){
+      if( r && r.status && r[title] ){
         var data = null;
-        for( var i = 0; i < r.data.length && data == null; i ++ ){
-          if( r.data[i].id == id ){
-            data = r.data[i];
+        for( var i = 0; i < r[title].length && data == null; i ++ ){
+          if( r[title][i].id == id ){
+            data = r[title][i];
           }
         }
 
         if( data ){
-          res.write( JSON.stringify( { status: true, data: data }, null, 2 ) );
+          var result = { status: true, res_headers: r.res_headers };
+          result[title] = data;
+          res.write( JSON.stringify( result, null, 2 ) );
           res.end();
         }else{
           res.status( 400 );
@@ -849,7 +870,7 @@ app.get( '/api/data/:title', async function( req, res ){
     var title = req.params.title;
     if( title ){
       var r = await app.getData( repo, title, token );
-      if( r && r.status && r.data ){
+      if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
@@ -880,7 +901,7 @@ app.put( '/api/data/:title/:id', async function( req, res ){
     if( title && id ){
       var data = req.body;
       var r = await app.putData( repo, title, id, token, data );
-      if( r && r.status && r.data ){
+      if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
@@ -910,7 +931,7 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
     var id = req.params.id;
     if( title && id ){
       var r = await app.deleteData( repo, title, id, token );
-      if( r && r.status && r.data ){
+      if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
