@@ -569,7 +569,7 @@ app.get( '/callback', function( req, res ){
         var tmp2 = tmp1[i].split( '=' );
         if( tmp2.length == 2 && tmp2[0] == 'access_token' ){
           var access_token = tmp2[1];
-          console.log( 'access_token = ' + access_token );
+          //console.log( 'access_token = ' + access_token );
 
           req.session.oauth = {};
           req.session.oauth.token = access_token;
