@@ -52,8 +52,8 @@ $( async function(){
         + '<td>' + record.created + '</td>'
         + '<td>' + record.updated + '</td>'
         + '<td>'
-        + '<button class="btn btn-warning" onClick="#">EDIT</button>'
-        + '<button class="btn btn-danger" onClick="#">DELETE</button>'
+        + '<button class="btn btn-warning" onClick="editItem(\'' + record.id + '\',\'' + record.data.name + '\',' + record.data.price + ');">EDIT</button>'
+        + '<button class="btn btn-danger" onClick="deleteItem(\'' + record.id + '\',\'' + record.data.name + '\');">DELETE</button>'
         + '</td>'
         + '</tr>';
       table += tr;
@@ -65,6 +65,79 @@ $( async function(){
     });
   }
 });
+
+
+function editItem( item_id, item_name, item_price ){
+  $('#edit_id').val( item_id );
+  $('#edit_name').val( item_name );
+  $('#edit_price').val( item_price );
+  $('#itemModal').modal( 'show' );
+}
+
+function createItem(){
+  $('#edit_id').val( '' );
+  $('#edit_name').val( '' );
+  $('#edit_price').val( '' );
+  $('#itemModal').modal( 'show' );
+}
+
+function deleteItem( item_id, item_name ){
+  if( confirm( item_name + 'を削除します。よろしいですか？' ) ){
+    $.ajax({
+      type: 'DELETE',
+      url: API_SERVER + '/api/data/' + schema + '/' + item_id,
+      success: function( result ){
+        //showRateLimitReset( result.res_headers );
+        window.location.href = '/';
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+
+        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+      }
+    });
+  }
+
+}
+
+function saveItem(){
+  var edit_id = $('#edit_id').val();
+  var edit_name = $('#edit_name').val();
+  var edit_price = parseInt( $('#edit_price').val() ); 
+  if( edit_id ){
+    //. update
+    $.ajax({
+      type: 'PUT',
+      url: API_SERVER + '/api/data/' + schema + '/' + edit_id,
+      data: { name: edit_name, price: edit_price },
+      success: function( result ){
+        //showRateLimitReset( result.res_headers );
+        window.location.href = '/';
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+
+        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+      }
+    })
+  }else{
+    //. create
+    $.ajax({
+      type: 'POST',
+      url: API_SERVER + '/api/data/' + schema,
+      data: { name: edit_name, price: edit_price },
+      success: function( result ){
+        //showRateLimitReset( result.res_headers );
+        window.location.href = '/';
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+
+        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+      }
+    });
+  }
+}
 </script>
 </head>
 <body>
@@ -92,10 +165,34 @@ $( async function(){
 
 <div class="container" style="margin-top: 50px;">
   <div style="text-align: right;">
-    <button class="btn btn-success" onClick="#">NEW</button>
+    <button class="btn btn-success" onClick="createItem();">NEW</button>
   </div>
 
   <div id="main">
+  </div>
+</div>
+
+<div class="modal bd-example-modal-lg fade" id="itemModal" tabindex="-1" role="dialog" aria-labbelledby="itemModal" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title copy_btn" data-clipboard-text="" id="itemModalLabel">編集</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="itemmodal-body">
+        <table class="table table-bordered">
+          <tr style="display: none;"><td>id</td><td><input type="text" id="edit_id" value=""/></td></tr>
+          <tr><td>name</td><td><input type="text" id="edit_name" value=""/></td></tr>
+          <tr><td>price</td><td><input type="number" id="edit_price" value=""/></td></tr>
+        </table>
+      </div>
+      <div class="modal-footer" id="itemmodal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+        <button class="btn btn-success" onClick="saveItem();">保存</button>
+      </div>
+    </div>
   </div>
 </div>
 
