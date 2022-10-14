@@ -1,3 +1,5 @@
+const { jar } = require('request');
+
 //. app.js
 var express = require( 'express' ),
     bodyParser = require( 'body-parser' ),
@@ -122,8 +124,7 @@ app.postSchema = async function( repo, title, token, schema_data ){
               var t = body.body;
               if( typeof t == 'string' ){ t = JSON.parse( t ); }
               var newschema_data = t;
-              newschema_data.title = body.title;
-              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
+              resolve( { status: true, res_headers: res.headers, title: body.title, schema: newschema_data } );
             }
           }
         });
@@ -172,6 +173,30 @@ app.getSchemas = async function( repo, token ){
   });
 };
 
+app.getSchema = async function( repo, title, token ){
+  return new Promise( async function( resolve, reject ){
+    var r0 = await app.getSchemas( repo, token );
+    if( r0 && r0.status && r0.schemas ){
+      var idx = -1;
+      var number = -1;
+      for( var i = 0; i < r0.schemas.length && idx == -1; i ++ ){
+        if( title == r0.schemas[i].title ){
+          idx = i;
+          number = r0.schemas[i].number;
+        }
+      }
+
+      if( idx > -1 ){
+        resolve( { status: true, res_headers: r0.res_headers, number: number, schema: r0.schemas[idx] } );
+      }else{
+        resolve( { status: false, error: 'not found for schema with title = "' + title + '".' } );
+      }
+    }else{
+      resolve( { status: false, error: 'failed to get schemas.' } );
+    }
+  });
+};
+
 app.putSchema = async function( repo, title, token, schema_data ){
   return new Promise( async function( resolve, reject ){
     var r0 = await app.getSchemas( repo, token );
@@ -214,8 +239,7 @@ app.putSchema = async function( repo, title, token, schema_data ){
               var t = body.body;
               if( typeof t == 'string' ){ t = JSON.parse( t ); }
               var newschema_data = t;
-              newschema_data.title = body.title;
-              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
+              resolve( { status: true, res_headers: res.headers, title: body.title, schema: newschema_data } );
             }
           }
         });
@@ -266,8 +290,7 @@ app.deleteSchema = async function( repo, title, token ){
               var t = body.body;
               if( typeof t == 'string' ){ t = JSON.parse( t ); }
               var newschema_data = t;
-              newschema_data.title = body.title;
-              resolve( { status: true, res_headers: res.headers, schema: newschema_data } );
+              resolve( { status: true, res_headers: res.headers, title: body.title, schema: newschema_data } );
             }
           }
         });
@@ -282,56 +305,67 @@ app.deleteSchema = async function( repo, title, token ){
 
 app.postData = async function( repo, title, token, data ){
   return new Promise( async function( resolve, reject ){
-    var r0 = await app.getData( repo, title, token );
-    if( r0 && r0.status && r0.data ){
-      var url = api_server_base + repo + '/issues/' + r0.number + '/comments';
-      if( typeof data == 'object' ){
-        data = JSON.stringify( data );
-      }
+    var r0 = await app.getSchema( repo, title, token );
+    if( r0 && r0.status && r0.schema ){
+      var schema = r0.schema;
 
-      var options = {
-        url: url,
-        method: 'POST',
-        json: { body: data },
-        headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
-      };
-      if( token ){
-        options.headers.Authorization = 'token ' + token;
-      }
-      request( options, ( err, res, body ) => {
-        if( err ){
-          console.log( { err } );
-          resolve( { status: false, error: err } );
-        }else{
-          if( typeof body == 'string' ){
-            body = JSON.parse( body );
-          }
-          //console.log( { body } );  //. レートリミットに達していると { "message": "API rate limit  exceeded for xx.xx.xx.xx. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting" }
-          if( body.message ){
-            resolve( { status: false, error: body } );
-          }else{
-            var t = body.body;
-            if( typeof t == 'string' ){ t = JSON.parse( t ); }
-            var newdata = t;
-            newdata.id = body.id;
-            resolve( { status: true, res_headers: res.headers, data: newdata } );
-          }
+      var r1 = await app.getData( repo, title, token );
+      if( r1 && r1.status && r1.data ){
+        var url = api_server_base + repo + '/issues/' + r1.number + '/comments';
+        if( typeof data == 'object' ){
+          data = JSON.stringify( data );
         }
-      });
+
+        //. #5
+        if( isDataValidSchema( data, schema ) ){
+          var options = {
+            url: url,
+            method: 'POST',
+            json: { body: data },
+            headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
+          };
+          if( token ){
+            options.headers.Authorization = 'token ' + token;
+          }
+          request( options, ( err, res, body ) => {
+            if( err ){
+              console.log( { err } );
+              resolve( { status: false, error: err } );
+            }else{
+              if( typeof body == 'string' ){
+                body = JSON.parse( body );
+              }
+              //console.log( { body } );  //. レートリミットに達していると { "message": "API rate limit  exceeded for xx.xx.xx.xx. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting" }
+              if( body.message ){
+                resolve( { status: false, error: body } );
+              }else{
+                var t = body.body;
+                if( typeof t == 'string' ){ t = JSON.parse( t ); }
+                var newdata = t;
+                resolve( { status: true, res_headers: res.headers, id: body.id, data: newdata } );
+              }
+            }
+          });
+        }else{
+          resolve( { status: false, error: 'data is not valid for schema.' } );
+        }
+      }else{
+        resolve( { status: false, error: 'failed to get data.' } );
+      }
     }else{
-      resolve( { status: false, error: 'failed to get data.' } );
+      resolve( { status: false, error: 'not found for schema with title = "' + title + '".' } );
     }
   });
 };
 
 app.getData = async function( repo, title, token ){
   return new Promise( async function( resolve, reject ){
-    var r0 = await app.getSchemas( repo, token );
-    if( r0 && r0.status && r0.schemas ){
+    var r1 = await app.getSchemas( repo, token );
+    if( r1 && r1.status && r1.schemas ){
       var number = -1;
-      for( var i = 0; i < r0.schemas.length && number == -1; i ++ ){
-        if( title == r0.schemas[i].title ){
-          number = r0.schemas[i].number;
+      for( var i = 0; i < r1.schemas.length && number == -1; i ++ ){
+        if( title == r1.schemas[i].title ){
+          number = r1.schemas[i].number;
         }
       }
 
@@ -375,97 +409,113 @@ app.getData = async function( repo, title, token ){
 
 app.putData = async function( repo, title, id, token, data ){
   return new Promise( async function( resolve, reject ){
-    var r0 = await app.getData( repo, title, token );
-    if( r0 && r0.status && r0.data ){
-      var _id = null;
-      for( var i = 0; i < r0.data.length && _id == null; i ++ ){
-        if( id == r0.data[i].id ){
-          _id = r0.data[i].id;
-        }
-      }
+    var r0 = await app.getSchema( repo, title, token );
+    if( r0 && r0.status && r0.schema ){
+      var schema = r0.schema;
 
-      if( _id ){
-        var url = api_server_base + repo + '/issues/comments/' + _id;
-        if( typeof data == 'object' ){
-          data = JSON.stringify( data );
-        }
-
-        var options = {
-          url: url,
-          method: 'PATCH',
-          json: { body: data },
-          headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
-        };
-        if( token ){
-          options.headers.Authorization = 'token ' + token;
-        }
-        request( options, ( err, res, body ) => {
-          if( err ){
-            console.log( { err } );
-            resolve( { status: false, error: err } );
-          }else{
-            if( typeof body == 'string' ){
-              body = JSON.parse( body );
-            }
-            //console.log( { body } );  //. レートリミットに達していると { "message": "API rate limit  exceeded for xx.xx.xx.xx. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting" }
-            if( body.message ){
-              resolve( { status: false, error: body } );
-            }else{
-              var t = body.body;
-              if( typeof t == 'string' ){ t = JSON.parse( t ); }
-              var newdata = t;
-              newdata.id = body.id;
-              resolve( { status: true, res_headers: res.headers, number: r0.number, data: newdata } );
-            }
+      var r1 = await app.getData( repo, title, token );
+      if( r1 && r1.status && r1.data ){
+        var _id = null;
+        for( var i = 0; i < r1.data.length && _id == null; i ++ ){
+          if( id == r1.data[i].id ){
+            _id = r1.data[i].id;
           }
-        });
+        }
+
+        if( _id ){
+          var url = api_server_base + repo + '/issues/comments/' + _id;
+          if( typeof data == 'object' ){
+            data = JSON.stringify( data );
+          }
+
+          if( isDataValidSchema( data, schema ) ){
+            var options = {
+              url: url,
+              method: 'PATCH',
+              json: { body: data },
+              headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
+            };
+            if( token ){
+              options.headers.Authorization = 'token ' + token;
+            }
+            request( options, ( err, res, body ) => {
+              if( err ){
+                console.log( { err } );
+                resolve( { status: false, error: err } );
+              }else{
+                if( typeof body == 'string' ){
+                  body = JSON.parse( body );
+                }
+                //console.log( { body } );  //. レートリミットに達していると { "message": "API rate limit  exceeded for xx.xx.xx.xx. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting" }
+                if( body.message ){
+                  resolve( { status: false, error: body } );
+                }else{
+                  var t = body.body;
+                  if( typeof t == 'string' ){ t = JSON.parse( t ); }
+                  var newdata = t;
+                  resolve( { status: true, res_headers: res.headers, id: body.id, number: r1.number, data: newdata } );
+                }
+              }
+            });
+          }else{
+            resolve( { status: false, error: 'data is not valid for schema.' } );
+          }
+        }else{
+          resolve( { status: false, error: 'not found for data with title = "' + title + '" and id = "' + id + '".' } );
+        }
       }else{
-        resolve( { status: false, error: 'not found for data with title = "' + title + '" and id = "' + id + '".' } );
+        resolve( { status: false, error: 'failed to get data.' } );
       }
     }else{
-      resolve( { status: false, error: 'failed to get data.' } );
+      resolve( { status: false, error: 'not found for schema with title = "' + title + '".' } );
     }
   });
 };
 
 app.deleteData = async function( repo, title, id, token ){
   return new Promise( async function( resolve, reject ){
-    var r0 = await app.getData( repo, title, token );
-    if( r0 && r0.status && r0.data ){
-      var _id = null;
-      for( var i = 0; i < r0.data.length && _id == null; i ++ ){
-        if( id == r0.data[i].id ){
-          _id = r0.data[i].id;
-        }
-      }
-
-      if( _id ){
-        var url = api_server_base + repo + '/issues/comments/' + _id;
-        if( typeof data == 'object' ){
-          data = JSON.stringify( data );
-        }
-
-        var options = {
-          url: url,
-          method: 'DELETE',
-          headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
-        };
-        if( token ){
-          options.headers.Authorization = 'token ' + token;
-        }
-        request( options, ( err, res, body ) => {
-          if( err ){
-            console.log( { err } );
-            resolve( { status: false, error: err } );
-          }else{
-            resolve( { status: true, res_headers: res.headers, number: r0.number } );
+    var r0 = await app.getSchema( repo, title, token );
+    if( r0 && r0.status && r0.schema ){
+      //var schema = r0.schema;  //. deleteData は schema のチェック不要
+      var r1 = await app.getData( repo, title, token );
+      if( r1 && r1.status && r1.data ){
+        var _id = null;
+        for( var i = 0; i < r1.data.length && _id == null; i ++ ){
+          if( id == r1.data[i].id ){
+            _id = r1.data[i].id;
           }
-        });
+        }
+
+        if( _id ){
+          var url = api_server_base + repo + '/issues/comments/' + _id;
+          if( typeof data == 'object' ){
+            data = JSON.stringify( data );
+          }
+
+          var options = {
+            url: url,
+            method: 'DELETE',
+            headers: { Accept: 'application/json', 'User-Agent': USER_AGENT }
+          };
+          if( token ){
+            options.headers.Authorization = 'token ' + token;
+          }
+          request( options, ( err, res, body ) => {
+            if( err ){
+              console.log( { err } );
+              resolve( { status: false, error: err } );
+            }else{
+              resolve( { status: true, res_headers: res.headers, number: r1.number } );
+            }
+          });
+        }else{
+          resolve( { status: false, error: 'not found for data with title = "' + title + '" and id = "' + id + '".' } );
+        }
       }else{
-        resolve( { status: false, error: 'not found for data with title = "' + title + '" and id = "' + id + '".' } );
+        resolve( { status: false, error: 'failed to get data.' } );
       }
     }else{
-      resolve( { status: false, error: 'failed to get data.' } );
+      resolve( { status: false, error: 'not found for schema with title = "' + title + '".' } );
     }
   });
 };
@@ -864,6 +914,27 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
     res.end();
   }
 });
+
+//. #5
+function isDataValidSchema( data, schema ){
+  var b = true;
+
+  if( typeof data == 'object' && typeof schame == 'object' ){
+    //. 「schema に設定されているキー値は全て必須」をルールとする
+    //. 「data に設定されているキー値は全て必須」ではない
+    //. schema 設定変更に伴うデータの矛盾はいったん無視とする
+    Object.keys( schema ).forEach( function( key ){
+      //. schema に設定されているキーを持ち、データ型が一致しているかどうかをチェック
+      if( !( key in data ) || !( typeof data.key == schema[key] ) ){
+        b = false;
+      }
+    });
+  }else{
+    b = false;
+  }
+
+  return b;
+}
 
 
 var http_server = http.createServer( app );

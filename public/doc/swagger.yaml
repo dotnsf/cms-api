@@ -3,7 +3,7 @@ info:
   description: CMS-API ドキュメント
   version: 0.0.1
   title: CMS-API REST APIs
-host: localhost:8080
+#host: localhost:8080
 basePath: /api
 tags:
   - name: schemas
