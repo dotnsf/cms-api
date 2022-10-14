@@ -27,7 +27,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -55,7 +54,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -86,7 +84,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -113,7 +110,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -144,7 +140,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -172,7 +167,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -199,7 +193,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -236,7 +229,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -268,7 +260,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header
@@ -304,7 +295,6 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
-          required: true
         - name: x-token
           type: string
           in: header

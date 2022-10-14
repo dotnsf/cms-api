@@ -80,8 +80,12 @@ app.getMe = async function( token ){
 };
 
 
+//. #9
+var GITHUB_REPO = 'GITHUB_REPO' in process.env && process.env.GITHUB_REPO ? process.env.GITHUB_REPO : '';
+
 app.postSchema = async function( repo, title, token, schema_data ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchemas( repo, token );
     if( r0 && r0.status && r0.schemas ){
       var number = -1;
@@ -137,6 +141,7 @@ app.postSchema = async function( repo, title, token, schema_data ){
 
 app.getSchemas = async function( repo, token ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var url = api_server_base + repo + '/issues?state=open';
 
     var options = {
@@ -175,6 +180,7 @@ app.getSchemas = async function( repo, token ){
 
 app.getSchema = async function( repo, title, token ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchemas( repo, token );
     if( r0 && r0.status && r0.schemas ){
       var idx = -1;
@@ -199,6 +205,7 @@ app.getSchema = async function( repo, title, token ){
 
 app.putSchema = async function( repo, title, token, schema_data ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchemas( repo, token );
     if( r0 && r0.status && r0.schemas ){
       var number = -1;
@@ -254,6 +261,7 @@ app.putSchema = async function( repo, title, token, schema_data ){
 
 app.deleteSchema = async function( repo, title, token ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchemas( repo, token );
     if( r0 && r0.status && r0.schemas ){
       var number = -1;
@@ -305,6 +313,7 @@ app.deleteSchema = async function( repo, title, token ){
 
 app.postData = async function( repo, title, token, data ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchema( repo, title, token );
     if( r0 && r0.status && r0.schema ){
       var schema = r0.schema;
@@ -362,6 +371,7 @@ app.postData = async function( repo, title, token, data ){
 
 app.getData = async function( repo, title, token ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r1 = await app.getSchemas( repo, token );
     if( r1 && r1.status && r1.schemas ){
       var number = -1;
@@ -414,6 +424,7 @@ app.getData = async function( repo, title, token ){
 
 app.putData = async function( repo, title, id, token, data ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchema( repo, title, token );
     if( r0 && r0.status && r0.schema ){
       var schema = r0.schema;
@@ -482,6 +493,7 @@ app.putData = async function( repo, title, id, token, data ){
 
 app.deleteData = async function( repo, title, id, token ){
   return new Promise( async function( resolve, reject ){
+    repo = repo ? repo : GITHUB_REPO;
     var r0 = await app.getSchema( repo, title, token );
     if( r0 && r0.status && r0.schema ){
       //var schema = r0.schema;  //. deleteData は schema のチェック不要
@@ -606,7 +618,7 @@ app.post( '/api/schema/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var schema_data = req.body;
       var r = await app.postSchema( repo, title, token, schema_data );
       if( r && r.status && r.schema ){
@@ -619,7 +631,7 @@ app.post( '/api/schema/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -636,7 +648,7 @@ app.get( '/api/schema/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var r = await app.getSchemas( repo, token );
       if( r && r.status && r.schemas ){
         var schema = null;
@@ -661,7 +673,7 @@ app.get( '/api/schema/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -677,19 +689,14 @@ app.get( '/api/schemas', async function( req, res ){
   if( req.headers['x-token'] || req.session && req.session.oauth ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
-    if( repo ){
-      var r = await app.getSchemas( repo, token );
-      if( r && r.status && r.schemas ){
-        res.write( JSON.stringify( { status: true, schemas: r.schemas }, null, 2 ) );
-        res.end();
-      }else{
-        res.status( 400 );
-        res.write( JSON.stringify( r, null, 2 ) );
-        res.end();
-      }
+
+    var r = await app.getSchemas( repo, token );
+    if( r && r.status && r.schemas ){
+      res.write( JSON.stringify( { status: true, schemas: r.schemas }, null, 2 ) );
+      res.end();
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'repo needed.' }, null, 2 ) );
+      res.write( JSON.stringify( r, null, 2 ) );
       res.end();
     }
   }else{
@@ -706,7 +713,7 @@ app.put( '/api/schema/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var schema_data = req.body;
       var r = await app.putSchema( repo, title, token, schema_data );
       if( r && r.status && r.schema ){
@@ -719,7 +726,7 @@ app.put( '/api/schema/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -736,7 +743,7 @@ app.delete( '/api/schema/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var r = await app.deleteSchema( repo, title, token );
       if( r && r.status && r.schema ){
         res.write( JSON.stringify( { status: true, schema: r.schema }, null, 2 ) );
@@ -748,7 +755,7 @@ app.delete( '/api/schema/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -767,7 +774,7 @@ app.post( '/api/data/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var data = req.body;
       var r = await app.postData( repo, title, token, data );
       if( r && r.status && r.data ){
@@ -780,7 +787,7 @@ app.post( '/api/data/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -798,7 +805,7 @@ app.get( '/api/data/:title/:id', async function( req, res ){
     var repo = req.query.repo;
     var title = req.params.title;
     var id = req.params.id;
-    if( repo && title && id ){
+    if( title && id ){
       var r = await app.getData( repo, title, token );
       if( r && r.status && r.data ){
         var data = null;
@@ -823,7 +830,7 @@ app.get( '/api/data/:title/:id', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'all repo, title, and id needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'both title and id needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -840,7 +847,7 @@ app.get( '/api/data/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
-    if( repo && title ){
+    if( title ){
       var r = await app.getData( repo, title, token );
       if( r && r.status && r.data ){
         res.write( JSON.stringify( r, null, 2 ) );
@@ -852,7 +859,7 @@ app.get( '/api/data/:title', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'both repo and title needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'title needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -870,7 +877,7 @@ app.put( '/api/data/:title/:id', async function( req, res ){
     var repo = req.query.repo;
     var title = req.params.title;
     var id = req.params.id;
-    if( repo && title && id ){
+    if( title && id ){
       var data = req.body;
       var r = await app.putData( repo, title, id, token, data );
       if( r && r.status && r.data ){
@@ -883,7 +890,7 @@ app.put( '/api/data/:title/:id', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'all repo, title, and id needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'both title and id needed.' }, null, 2 ) );
       res.end();
     }
   }else{
@@ -901,7 +908,7 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
     var repo = req.query.repo;
     var title = req.params.title;
     var id = req.params.id;
-    if( repo && title && id ){
+    if( title && id ){
       var r = await app.deleteData( repo, title, id, token );
       if( r && r.status && r.data ){
         res.write( JSON.stringify( r, null, 2 ) );
@@ -913,7 +920,7 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
       }
     }else{
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, error: 'all repo, title, and id needed.' }, null, 2 ) );
+      res.write( JSON.stringify( { status: false, error: 'both title and id needed.' }, null, 2 ) );
       res.end();
     }
   }else{
