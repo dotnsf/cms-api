@@ -310,14 +310,14 @@ app.postData = async function( repo, title, token, data ){
       var schema = r0.schema;
 
       var r1 = await app.getData( repo, title, token );
-      if( r1 && r1.status && r1.data ){
+      if( r1 && r1.status && ( title in r1 ) && r1[title] ){
         var url = api_server_base + repo + '/issues/' + r1.number + '/comments';
         if( typeof data == 'object' ){
           data = JSON.stringify( data );
         }
 
         //. #5
-        if( isDataValidSchema( data, schema ) ){
+        if( isDataValidSchema( data, schema.schema ) ){
           var options = {
             url: url,
             method: 'POST',
@@ -342,7 +342,9 @@ app.postData = async function( repo, title, token, data ){
                 var t = body.body;
                 if( typeof t == 'string' ){ t = JSON.parse( t ); }
                 var newdata = t;
-                resolve( { status: true, res_headers: res.headers, id: body.id, data: newdata } );
+                var r = { status: true, res_headers: res.headers, id: body.id, created: body.created_at, updated: body.updated_at, number: r1.number  };
+                r[title] = newdata;
+                resolve( r );
               }
             }
           });
@@ -393,9 +395,12 @@ app.getData = async function( repo, title, token ){
             for( var i = 0; i < body.length; i ++ ){
               var t = body[i].body;
               if( typeof t == 'string' ){ t = JSON.parse( t ); }
-              newdata.push( { id: body[i].id, data: t } );
+              newdata.push( { id: body[i].id, created: body[i].created_at, updated: body[i].updated_at, data: t } );
             }
-            resolve( { status: true, res_headers: res.headers, number: number, data: newdata } );
+
+            var r = { status: true, res_headers: res.headers, number: number };
+            r[title] = newdata;
+            resolve( r );
           }
         });
       }else{
@@ -414,11 +419,11 @@ app.putData = async function( repo, title, id, token, data ){
       var schema = r0.schema;
 
       var r1 = await app.getData( repo, title, token );
-      if( r1 && r1.status && r1.data ){
+      if( r1 && r1.status && ( title in r1 ) && r1[title] ){
         var _id = null;
-        for( var i = 0; i < r1.data.length && _id == null; i ++ ){
-          if( id == r1.data[i].id ){
-            _id = r1.data[i].id;
+        for( var i = 0; i < r1[title].length && _id == null; i ++ ){
+          if( id == r1[title][i].id ){
+            _id = r1[title][i].id;
           }
         }
 
@@ -428,7 +433,7 @@ app.putData = async function( repo, title, id, token, data ){
             data = JSON.stringify( data );
           }
 
-          if( isDataValidSchema( data, schema ) ){
+          if( isDataValidSchema( data, schema.schema ) ){
             var options = {
               url: url,
               method: 'PATCH',
@@ -453,7 +458,10 @@ app.putData = async function( repo, title, id, token, data ){
                   var t = body.body;
                   if( typeof t == 'string' ){ t = JSON.parse( t ); }
                   var newdata = t;
-                  resolve( { status: true, res_headers: res.headers, id: body.id, number: r1.number, data: newdata } );
+
+                  var r = { status: true, res_headers: res.headers, id: body.id, created: body.created_at, updated: body.updated_at, number: r1.number };
+                  r[title] = newdata;
+                  resolve( r );
                 }
               }
             });
@@ -478,11 +486,11 @@ app.deleteData = async function( repo, title, id, token ){
     if( r0 && r0.status && r0.schema ){
       //var schema = r0.schema;  //. deleteData は schema のチェック不要
       var r1 = await app.getData( repo, title, token );
-      if( r1 && r1.status && r1.data ){
+      if( r1 && r1.status && ( title in r1 ) && r1[title] ){
         var _id = null;
-        for( var i = 0; i < r1.data.length && _id == null; i ++ ){
-          if( id == r1.data[i].id ){
-            _id = r1.data[i].id;
+        for( var i = 0; i < r1[title].length && _id == null; i ++ ){
+          if( id == r1[title][i].id ){
+            _id = r1[title][i].id;
           }
         }
 
@@ -919,13 +927,20 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
 function isDataValidSchema( data, schema ){
   var b = true;
 
-  if( typeof data == 'object' && typeof schame == 'object' ){
+  if( typeof data == 'string' ){ data = JSON.parse( data ); }
+  if( typeof schema == 'string' ){ data = JSON.parse( schema ); }
+
+  if( typeof data == 'object' && typeof schema == 'object' ){
     //. 「schema に設定されているキー値は全て必須」をルールとする
     //. 「data に設定されているキー値は全て必須」ではない
     //. schema 設定変更に伴うデータの矛盾はいったん無視とする
+    /*
+      data = { "name": "string", "price": 100 },
+      schema = { name: "string", price: "number" }
+    */
     Object.keys( schema ).forEach( function( key ){
       //. schema に設定されているキーを持ち、データ型が一致しているかどうかをチェック
-      if( !( key in data ) || !( typeof data.key == schema[key] ) ){
+      if( !( key in data ) || !( typeof data[key] == schema[key] ) ){
         b = false;
       }
     });
