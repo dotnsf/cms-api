@@ -87,13 +87,12 @@ function deleteItem( item_id, item_name ){
       type: 'DELETE',
       url: API_SERVER + '/api/data/' + schema + '/' + item_id,
       success: function( result ){
-        //showRateLimitReset( result.res_headers );
+        showRateLimitReset( result.res_headers );
         window.location.href = '/';
       },
       error: function( e0, e1, e2 ){
         console.log( e0, e1, e2 );
-
-        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+        window.location.href = '/';
       }
     });
   }
@@ -109,9 +108,11 @@ function saveItem(){
     $.ajax({
       type: 'PUT',
       url: API_SERVER + '/api/data/' + schema + '/' + edit_id,
-      data: { name: edit_name, price: edit_price },
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( { name: edit_name, price: edit_price } ),
       success: function( result ){
-        //showRateLimitReset( result.res_headers );
+        showRateLimitReset( result.res_headers );
         window.location.href = '/';
       },
       error: function( e0, e1, e2 ){
@@ -128,7 +129,7 @@ function saveItem(){
       dataType: 'json',
       data: JSON.stringify( { name: edit_name, price: edit_price } ),
       success: function( result ){
-        //showRateLimitReset( result.res_headers );
+        showRateLimitReset( result.res_headers );
         window.location.href = '/';
       },
       error: function( e0, e1, e2 ){

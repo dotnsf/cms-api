@@ -798,7 +798,7 @@ app.post( '/api/data/:title', async function( req, res ){
       var data = req.body;
 
       var r = await app.postData( repo, title, token, data );  //. 'data is not valid for schema.'
-      if( r && r.status && r.data ){
+      if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
