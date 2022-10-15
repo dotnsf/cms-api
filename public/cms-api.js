@@ -1,4 +1,143 @@
 //. cms-api.js
+async function postSchema( schema_name, schema_data, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'POST',
+      url: API_SERVER + '/api/schema/' + schema_name,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( schema_data ),
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+        if( redirect_url ){
+          alert( e2 );
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function getSchema( schema, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'GET',
+      url: API_SERVER + '/api/schema/' + schema,
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function getSchemas( redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'GET',
+      url: API_SERVER + '/api/schemas',
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function putSchema( schema, id, data, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'PUT',
+      url: API_SERVER + '/api/schema/' + schema + '/' + id,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( data ),
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+        if( redirect_url ){
+          alert( e2 );
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function deleteSchema( schema, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    if( confirm( schema + 'を削除します。よろしいですか？' ) ){
+      $.ajax({
+        type: 'DELETE',
+        url: API_SERVER + '/api/schema/' + schema,
+        success: function( result ){
+          showRateLimitReset( result.res_headers );
+          if( redirect_url ){
+            window.location.href = redirect_url;
+          }else{
+            resolve( result );
+          }
+        },
+        error: function( e0, e1, e2 ){
+          console.log( e0, e1, e2 );
+          if( redirect_url ){
+            window.location.href = redirect_url;
+          }else{
+            resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+          }
+        }
+      });
+    }
+  });
+}
+
 async function postData( schema, data, redirect_url ){
   return new Promise( async function( resolve, reject ){
     $.ajax({
@@ -34,7 +173,6 @@ async function getData( schema, redirect_url ){
       type: 'GET',
       url: API_SERVER + '/api/data/' + schema,
       success: function( result ){
-        console.log( result );
         showRateLimitReset( result.res_headers );
 
         if( redirect_url ){

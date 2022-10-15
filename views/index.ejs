@@ -88,7 +88,7 @@ function deleteItem( item_id, item_name ){
 function saveItem(){
   var edit_id = $('#edit_id').val();
   var edit_name = $('#edit_name').val();
-  var edit_price = parseInt( $('#edit_price').val() ); 
+  var edit_price = parseInt( $('#edit_price').val() );  //. type=number でもこの状態では string 扱いなので parseInt が必須
   if( edit_id ){
     //. update
     putData( 'items', edit_id, { name: edit_name, price: edit_price }, '/' );
