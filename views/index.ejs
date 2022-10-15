@@ -82,21 +82,7 @@ function createItem(){
 }
 
 function deleteItem( item_id, item_name ){
-  if( confirm( item_name + 'を削除します。よろしいですか？' ) ){
-    $.ajax({
-      type: 'DELETE',
-      url: API_SERVER + '/api/data/' + schema + '/' + item_id,
-      success: function( result ){
-        showRateLimitReset( result.res_headers );
-        window.location.href = '/';
-      },
-      error: function( e0, e1, e2 ){
-        console.log( e0, e1, e2 );
-        window.location.href = '/';
-      }
-    });
-  }
-
+  deleteData( 'items', item_id, item_name, '/' );
 }
 
 function saveItem(){
@@ -105,38 +91,10 @@ function saveItem(){
   var edit_price = parseInt( $('#edit_price').val() ); 
   if( edit_id ){
     //. update
-    $.ajax({
-      type: 'PUT',
-      url: API_SERVER + '/api/data/' + schema + '/' + edit_id,
-      contentType: 'application/json',
-      dataType: 'json',
-      data: JSON.stringify( { name: edit_name, price: edit_price } ),
-      success: function( result ){
-        showRateLimitReset( result.res_headers );
-        window.location.href = '/';
-      },
-      error: function( e0, e1, e2 ){
-        console.log( e0, e1, e2 );
-        alert( e2 );
-      }
-    })
+    putData( 'items', edit_id, { name: edit_name, price: edit_price }, '/' );
   }else{
     //. create
-    $.ajax({
-      type: 'POST',
-      url: API_SERVER + '/api/data/' + schema,
-      contentType: 'application/json',
-      dataType: 'json',
-      data: JSON.stringify( { name: edit_name, price: edit_price } ),
-      success: function( result ){
-        showRateLimitReset( result.res_headers );
-        window.location.href = '/';
-      },
-      error: function( e0, e1, e2 ){
-        console.log( e0, e1, e2 );
-        alert( e2 );
-      }
-    });
+    postData( 'items', { name: edit_name, price: edit_price }, '/' );
   }
 }
 </script>

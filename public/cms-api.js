@@ -1,5 +1,34 @@
 //. cms-api.js
-async function getData( schema ){
+async function postData( schema, data, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'POST',
+      url: API_SERVER + '/api/data/' + schema,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( data ),
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+        if( redirect_url ){
+          alert( e2 );
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function getData( schema, redirect_url ){
   return new Promise( async function( resolve, reject ){
     $.ajax({
       type: 'GET',
@@ -7,15 +36,79 @@ async function getData( schema ){
       success: function( result ){
         console.log( result );
         showRateLimitReset( result.res_headers );
-        resolve( result );
+
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
       },
       error: function( e0, e1, e2 ){
         console.log( e0, e1, e2 );
 
-        //reject( e0 );
-        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
       }
     });
+  });
+}
+
+async function putData( schema, id, data, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    $.ajax({
+      type: 'PUT',
+      url: API_SERVER + '/api/data/' + schema + '/' + id,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( data ),
+      success: function( result ){
+        showRateLimitReset( result.res_headers );
+        if( redirect_url ){
+          window.location.href = redirect_url;
+        }else{
+          resolve( result );
+        }
+      },
+      error: function( e0, e1, e2 ){
+        console.log( e0, e1, e2 );
+        if( redirect_url ){
+          alert( e2 );
+          window.location.href = redirect_url;
+        }else{
+          resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+        }
+      }
+    });
+  });
+}
+
+async function deleteData( schema, data_id, data_name, redirect_url ){
+  return new Promise( async function( resolve, reject ){
+    if( confirm( data_name + 'を削除します。よろしいですか？' ) ){
+      $.ajax({
+        type: 'DELETE',
+        url: API_SERVER + '/api/data/' + schema + '/' + data_id,
+        success: function( result ){
+          showRateLimitReset( result.res_headers );
+          if( redirect_url ){
+            window.location.href = redirect_url;
+          }else{
+            resolve( result );
+          }
+        },
+        error: function( e0, e1, e2 ){
+          console.log( e0, e1, e2 );
+          if( redirect_url ){
+            window.location.href = redirect_url;
+          }else{
+            resolve( { status: false, error: e2, message: JSON.stringify( e0 ) } );
+          }
+        }
+      });
+    }
   });
 }
 
