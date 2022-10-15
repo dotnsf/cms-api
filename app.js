@@ -794,8 +794,10 @@ app.post( '/api/data/:title', async function( req, res ){
     var repo = req.query.repo;
     var title = req.params.title;
     if( title ){
+      //. 呼び出し元では { name: 'xxx', price: 1000 } なのに、ここでは { name: 'xxx', price: '1000' } で渡されてくる
       var data = req.body;
-      var r = await app.postData( repo, title, token, data );
+
+      var r = await app.postData( repo, title, token, data );  //. 'data is not valid for schema.'
       if( r && r.status && r.data ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
@@ -931,7 +933,7 @@ app.delete( '/api/data/:title/:id', async function( req, res ){
     var id = req.params.id;
     if( title && id ){
       var r = await app.deleteData( repo, title, id, token );
-      if( r && r.status && r[title] ){
+      if( r && r.status && r.data ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
       }else{
@@ -959,7 +961,6 @@ function isDataValidSchema( data, schema ){
   if( typeof schema == 'string' ){ data = JSON.parse( schema ); }
 
   if( typeof data == 'object' && typeof schema == 'object' ){
-    console.log( 1 );
     //. 「schema に設定されているキー値は全て必須」をルールとする
     //. 「data に設定されているキー値は全て必須」ではない
     //. schema 設定変更に伴うデータの矛盾はいったん無視とする
@@ -984,7 +985,6 @@ function isDataValidSchema( data, schema ){
       }
     });
   }else{
-    console.log( 2 );
     b = false;
   }
 

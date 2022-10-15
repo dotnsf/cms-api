@@ -116,8 +116,7 @@ function saveItem(){
       },
       error: function( e0, e1, e2 ){
         console.log( e0, e1, e2 );
-
-        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+        alert( e2 );
       }
     })
   }else{
@@ -125,15 +124,16 @@ function saveItem(){
     $.ajax({
       type: 'POST',
       url: API_SERVER + '/api/data/' + schema,
-      data: { name: edit_name, price: edit_price },
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify( { name: edit_name, price: edit_price } ),
       success: function( result ){
         //showRateLimitReset( result.res_headers );
         window.location.href = '/';
       },
       error: function( e0, e1, e2 ){
         console.log( e0, e1, e2 );
-
-        resolve( { status: false, error: e0, message: JSON.stringify( e0 ) } );
+        alert( e2 );
       }
     });
   }
