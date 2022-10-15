@@ -613,16 +613,37 @@ app.get( '/callback', function( req, res ){
 
 
 app.get( '/', function( req, res ){
+  res.contentType( 'application/json; charset=utf-8' );
+  res.write( JSON.stringify( { status: true }, null, 2 ) );
+  res.end();
+});
+
+app.get( '/items', function( req, res ){
   try{
     if( req.session && req.session.oauth && req.session.oauth.token ){ 
       console.log( req.session.oauth );
-      res.render( 'index', { user: req.session.oauth, API_SERVER: '' } );
+      res.render( 'items', { user: req.session.oauth, API_SERVER: '' } );
     }else{
       res.redirect( '/login' );
     }
   }catch( e ){
     console.log( e );
-    res.render( 'index', { user: null, API_SERVER: '', error: e } );
+    res.render( 'items', { user: null, API_SERVER: '', error: e } );
+  }finally{
+  }
+});
+
+app.get( '/richitems', function( req, res ){
+  try{
+    if( req.session && req.session.oauth && req.session.oauth.token ){ 
+      console.log( req.session.oauth );
+      res.render( 'richitems', { user: req.session.oauth, API_SERVER: '' } );
+    }else{
+      res.redirect( '/login' );
+    }
+  }catch( e ){
+    console.log( e );
+    res.render( 'richitems', { user: null, API_SERVER: '', error: e } );
   }finally{
   }
 });
@@ -794,10 +815,9 @@ app.post( '/api/data/:title', async function( req, res ){
     var repo = req.query.repo;
     var title = req.params.title;
     if( title ){
-      //. 呼び出し元では { name: 'xxx', price: 1000 } なのに、ここでは { name: 'xxx', price: '1000' } で渡されてくる
       var data = req.body;
 
-      var r = await app.postData( repo, title, token, data );  //. 'data is not valid for schema.'
+      var r = await app.postData( repo, title, token, data );
       if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();
@@ -973,9 +993,9 @@ function isDataValidSchema( data, schema ){
       if( !( key in data ) ){
         b = false;
       }else if( schema[key] == 'richtext' || schema[key] == 'binary' ){
-        //. data[key] = 'text/markdown \t markdown';
-        //.        or = 'image/png \t base64';
-        if( !( typeof data[key] == 'string' ) || data[key].split( ' \t ' ).length < 2 ){
+        //. data[key] = 'text/markdown | markdown';
+        //.        or = 'image/png | base64';
+        if( !( typeof data[key] == 'string' ) || data[key].split( ' | ' ).length < 2 ){
           b = false;
         }
       }else{

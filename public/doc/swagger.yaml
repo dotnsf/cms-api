@@ -312,10 +312,6 @@ definitions:
         type: string
       price:
         type: string
-      created:
-        type: string
-      updated:
-        type: string
   DataRequest:
     type: object
     properties:
@@ -325,10 +321,4 @@ definitions:
       price:
         type: number
         description: price
-      created:
-        type: number
-        description: created timestamp
-      updated:
-        type: number
-        description: updated timestamp
 

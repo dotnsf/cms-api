@@ -34,6 +34,12 @@
 var API_SERVER = '<%= API_SERVER ? API_SERVER : "" %>';
 var schema = 'items';
 $( async function(){
+  $.extend( $.fn.dataTable.defaults, { 
+    language: {
+      url: "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Japanese.json"
+    } 
+  }); 
+
   var result = await getData( schema );
   if( result && result.status && result[schema] ){
     if( result.res_headers ){
@@ -61,6 +67,11 @@ $( async function(){
     table += '</tbody></table>';
     $('#main').html( table );
     $('#items_table').DataTable({
+      scrollY: 200,
+      columnDefs: [{
+        targets: [5],
+        orderable: false
+      }],
       order: [ [ 4, 'desc' ] ]
     });
   }
@@ -82,7 +93,7 @@ function createItem(){
 }
 
 function deleteItem( item_id, item_name ){
-  deleteData( 'items', item_id, item_name, '/' );
+  deleteData( schema, item_id, item_name, '/items' );
 }
 
 function saveItem(){
@@ -91,10 +102,10 @@ function saveItem(){
   var edit_price = parseInt( $('#edit_price').val() );  //. type=number でもこの状態では string 扱いなので parseInt が必須
   if( edit_id ){
     //. update
-    putData( 'items', edit_id, { name: edit_name, price: edit_price }, '/' );
+    putData( schema, edit_id, { name: edit_name, price: edit_price }, '/items' );
   }else{
     //. create
-    postData( 'items', { name: edit_name, price: edit_price }, '/' );
+    postData( schema, { name: edit_name, price: edit_price }, '/items' );
   }
 }
 </script>
@@ -112,7 +123,7 @@ function saveItem(){
     <li class="nav-item">
       <div>
 <% if( user ){ %>
-        <a class="btn btn-warning" href="#" onClick="apiLogout( '/' );" title="<%= user.name %>"><img src="<%= user.avatar_url %>" width="30"/></a>
+        <a class="btn btn-warning" href="#" onClick="apiLogout( '/items' );" title="<%= user.name %>"><img src="<%= user.avatar_url %>" width="30"/></a>
 <% }else{ %>
         <a class="btn btn-primary" href="#" onClick="apiLogin();" title="ログイン">ログイン</a>
 <% } %>

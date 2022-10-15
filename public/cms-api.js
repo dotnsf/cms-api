@@ -331,7 +331,7 @@ function apiLogout( redirect_url ){
 //. #10
 function toRichText( content ){
   if( typeof content == 'string' ){
-    return 'text/markdown \t ' + content;
+    return 'text/markdown | ' + content;
   }else{
     return null;
   }
@@ -339,7 +339,7 @@ function toRichText( content ){
 
 function fromRichText( richtext ){
   if( typeof richtext == 'string' ){
-    var tmp = richtext.split( ' \t ' );
+    var tmp = richtext.split( ' | ' );
     if( tmp.length == 2 && tmp[0] == 'text/markdown' ){
       return tmp[1];
     }else{
@@ -350,36 +350,39 @@ function fromRichText( richtext ){
   }
 }
 
-function toBinaryById( id ){
-  var file = $('#'+id).files[0];
-  var reader = new FileReader();
-  reader.onload = function( evt ){
-    var b64 = evt.currentTarget.result; //. 'data:image/png;base64,XXX'
-    var tmp = b64.split( ',' );
-    if( tmp.length == 2 ){
-      var text = tmp[1];
-      tmp = b64.split( ';' );
+async function toBinaryById( id ){
+  return new Promise( async function( resolve, reject ){
+    //var file = document.querySelector('#'+id).files[0];
+    var file = document.querySelector('input[type=file]').files[0];
+    var reader = new FileReader();
+    reader.onload = function( evt ){
+      var b64 = evt.currentTarget.result; //. 'data:image/png;base64,XXX'
+      var tmp = b64.split( ',' );
       if( tmp.length == 2 ){
-        tmp = tmp[0].split( ':' );
+        var text = tmp[1];
+        tmp = b64.split( ';' );
         if( tmp.length == 2 ){
-          var type = tmp[1];
-          return ( type + ' \t ' + text );
+          tmp = tmp[0].split( ':' );
+          if( tmp.length == 2 ){
+            var type = tmp[1];
+            resolve( type + ' | ' + text );
+          }else{
+            resolve( ' | ' + text );
+          }
         }else{
-          return ( ' \t ' + text );
+          resolve( ' | ' + text );
         }
       }else{
-        return ( ' \t ' + text );
+        resolve( ' | ' + b64 );
       }
-    }else{
-      return ( ' \t ' + b64 );
     }
-  }
-  reader.readAsDataURL( file );
+    reader.readAsDataURL( file );
+  });
 }
 
 function fromBinary( binary ){
   if( typeof binary == 'string' ){
-    var tmp = richtext.split( ' \t ' );
+    var tmp = binary.split( ' | ' );
     if( tmp.length == 2 ){
       var type = tmp[0];
       var b64text = tmp[1];

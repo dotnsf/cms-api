@@ -152,26 +152,26 @@
 
     - content : 変換前リッチテキスト（マークダウンテキスト）
 
-    - 返り値 : `text/markdown \t content`
+    - 返り値 : `text/markdown | content`
 
   - fromRichText( richtext ) : リッチテキストから変換
 
-    - richtext : `text/markdown \t content`
+    - richtext : `text/markdown | content`
 
     - 返り値 : `content`
 
 
 - バイナリデータ操作
 
-  - toBinaryById( id ) : バイナリデータへ変換
+  - (async) toBinaryById( id ) : バイナリデータへ変換
 
     - id : `type=file` の input 要素の id
 
-    - 返り値 : `contenttype \t (base64テキスト)`
+    - 返り値 : `contenttype | (base64テキスト)`
 
   - fromBinary( binary ) : バイナリデータから変換
 
-    - binary : `contenttype \t (base64テキスト)`
+    - binary : `contenttype | (base64テキスト)`
 
     - 返り値 : `data:contenttype;base64,(base64テキスト)`
 
