@@ -112,9 +112,9 @@ function saveItem(){
     <li class="nav-item">
       <div>
 <% if( user ){ %>
-        <a class="btn btn-warning" href="#" onClick="myLogout( '/' );" title="<%= user.name %>"><img src="<%= user.avatar_url %>" width="30"/></a>
+        <a class="btn btn-warning" href="#" onClick="apiLogout( '/' );" title="<%= user.name %>"><img src="<%= user.avatar_url %>" width="30"/></a>
 <% }else{ %>
-        <a class="btn btn-primary" href="#" onClick="myLogin();" title="ログイン">ログイン</a>
+        <a class="btn btn-primary" href="#" onClick="apiLogin();" title="ログイン">ログイン</a>
 <% } %>
         <a id="canvas_wrap" title="" href="#"><canvas id="mycanvas" width="30" height="30"></canvas></a>
       </div>

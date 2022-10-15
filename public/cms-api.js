@@ -318,11 +318,11 @@ function getDateTime( seed ){
   return ymdhns;
 }
 
-function myLogin(){
+function apiLogin(){
   location.href = '/login';
 }
 
-function myLogout( redirect_url ){
+function apiLogout( redirect_url ){
   if( confirm( "ログアウトしますか？" ) ){
     location.href = '/logout' + ( redirect_url ? '?redirect=' + redirect_url : '' );
   }
