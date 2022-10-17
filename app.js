@@ -1,5 +1,3 @@
-const { jar } = require('request');
-
 //. app.js
 var express = require( 'express' ),
     bodyParser = require( 'body-parser' ),
