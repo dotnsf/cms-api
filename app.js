@@ -371,7 +371,7 @@ app.postData = async function( repo, title, token, data ){
   });
 };
 
-app.getData = async function( repo, title, token ){
+app.getData = async function( repo, title, token, limit, offset, keyword ){
   return new Promise( async function( resolve, reject ){
     repo = repo ? repo : GITHUB_REPO;
     var r1 = await app.getSchemas( repo, token );
@@ -406,8 +406,26 @@ app.getData = async function( repo, title, token ){
             var newdata = [];
             for( var i = 0; i < body.length; i ++ ){
               var t = body[i].body;
-              if( typeof t == 'string' ){ t = JSON.parse( t ); }
-              newdata.push( { id: body[i].id, created: body[i].created_at, updated: body[i].updated_at, data: t } );
+
+              //. #13
+              if( keyword ){
+                if( typeof t == 'object' ){ t = JSON.stringify( t ); }
+                if( t.indexOf( keyword ) > -1 ){
+                  t = JSON.parse( t );
+                  newdata.push( { id: body[i].id, created: body[i].created_at, updated: body[i].updated_at, data: t } );
+                }
+              }else{
+                if( typeof t == 'string' ){ t = JSON.parse( t ); }
+                newdata.push( { id: body[i].id, created: body[i].created_at, updated: body[i].updated_at, data: t } );
+              }
+            }
+
+            //. サブセットを取り出す
+            if( !offset ){ offset = 0; }
+            if( limit ){
+              newdata = newdata.slice( offset, offset + limit );
+            }else{
+              newdata = newdata.slice( offset )
             }
 
             var r = { status: true, res_headers: res.headers, number: number };
@@ -888,8 +906,13 @@ app.get( '/api/data/:title', async function( req, res ){
     var token = req.headers['x-token'] || req.session.oauth.token;
     var repo = req.query.repo;
     var title = req.params.title;
+
+    //. #13
+    var limit = ( req.query.limit ? parseInt( req.query.limit ) : 0 );
+    var offset = ( req.query.offset ? parseInt( req.query.offset ) : 0 );
+    var keyword = ( req.query.keyword ? req.query.keyword : '' );
     if( title ){
-      var r = await app.getData( repo, title, token );
+      var r = await app.getData( repo, title, token, limit, offset, keyword );
       if( r && r.status && r[title] ){
         res.write( JSON.stringify( r, null, 2 ) );
         res.end();

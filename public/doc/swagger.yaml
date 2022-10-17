@@ -167,6 +167,18 @@ paths:
           type: string
           in: query
           description: GitHub リポジトリ名
+        - name: limit
+          type: number
+          in: query
+          description: 取得データ数(Default なし)
+        - name: offset
+          type: number
+          in: query
+          description: 取得データオフセット(Default なし)
+        - name: keyword
+          type: string
+          in: query
+          description: 全文検索キーワード(Default なし)
         - name: x-token
           type: string
           in: header
